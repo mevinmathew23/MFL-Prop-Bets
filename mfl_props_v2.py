@@ -160,7 +160,7 @@ def main():
     gs = gspread.authorize(credentials)
 
     gsheet = gs.open_by_key(sheet_id)
-    worksheet = "Week%s" % (week)
+    worksheet = "Week%s%s" % (week, position)
     wsheet = gsheet.worksheet(worksheet)
 
     row_offset = 2
@@ -168,7 +168,7 @@ def main():
     for team in team_list:
         for i in range(row_offset, row_offset + len(team.prop_players)):
             if i == row_offset:
-                wsheet.update_cell(i, 1, team.team_name)
+                wsheet.update_cell(i, 1, team.manager)
                 wsheet.update_cell(i, 5, team.prop_total)
             wsheet.update_cell(i, 2, team.prop_players[row_offset-i]['name'])
             wsheet.update_cell(i, 3, team.prop_players[row_offset-i]['selected_position'])
