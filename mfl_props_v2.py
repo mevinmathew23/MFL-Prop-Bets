@@ -29,6 +29,7 @@ class Player():
         self.player_id = None
         self.name = None
         self.selected_position = None
+        self.primary_position = None
         self.points = None
 
 # Class for all team data
@@ -45,6 +46,7 @@ class Team():
 def get_player_stats(player_id, week):
     yahoo_api._login()
     url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/%s.l.%s/players;player_keys=%s.p.%s/stats;type=week;week=%s' % (game_id, league_id, game_id, player_id, week)
+    # print(game_id, league_id, game_id, player_id, week)
     response = oauth.session.get(url, params={'format': 'json'})
     r = response.json()
     points = r['fantasy_content']['league'][1]['players']['0']['player'][1]['player_points']['total']
@@ -57,6 +59,7 @@ def get_team_info(tid, week, prop_position):
     yahoo_api._login()
     url = 'https://fantasysports.yahooapis.com/fantasy/v2/team/%s.l.%s.t.%s/roster;week=%s' % (game_id, league_id, tid, week)
     response = oauth.session.get(url, params={'format': 'json'})
+    # print(game_id, league_id, tid, week)
     r = response.json()
     # print(r['fantasy_content']['team'][1]['roster']['0']['players']['count'])
     player_count = r['fantasy_content']['team'][1]['roster']['0']['players']['count']
@@ -79,7 +82,14 @@ def get_team_info(tid, week, prop_position):
         current_player.player_id = players[str(i)]['player'][0][1]['player_id']
         current_player.name = players[str(i)]['player'][0][2]['name']['full']
         current_player.selected_position = players[str(i)]['player'][1]['selected_position'][1]['position']
+        for i in players[str(i)]['player'][0]:
+            if "primary_position" in i:
+                current_player.primary_position = i['primary_position']
+                # print(current_player.name, current_player.primary_position)
+                # print('\n')
+        # current_player.primary_position = players[str(i)]['player'][0][15]['primary_position'][0]['position']
         # current_player.is_starting = field['starting_status']['is_starting']
+        # print(current_player.name)
         current_player.points = get_player_stats(current_player.player_id, week)
         player_list.append(current_player.__dict__)
 
@@ -96,12 +106,26 @@ def get_team_info(tid, week, prop_position):
 
 # Function to get the prop bet total for the week
 def get_prop_total(team, prop_position):
-    prop_total = 0
-    for player in team.players:
-        if (player['selected_position'] == prop_position):
-            prop_total += float(player['points'])
-            team.prop_players.append(player)
-            
+    prop_total = 0.0
+    if '|' in prop_position:
+        for position in prop_position.split('|'):      
+            for player in team.players:
+                if (player['selected_position'] == position):
+                    prop_total += float(player['points'])
+                    team.prop_players.append(player)
+                if prop_position == 'TE':
+                    if (player['selected_position'] == 'W/R/T' and player['primary_position'] == 'TE'):
+                        prop_total += float(player['points'])
+                        team.prop_players.append(player)
+    else:
+        for player in team.players:
+            if (player['selected_position'] == prop_position):
+                prop_total += float(player['points'])
+                team.prop_players.append(player)
+            if prop_position == 'TE':
+                if (player['selected_position'] == 'W/R/T' and player['primary_position'] == 'TE'):
+                    prop_total += float(player['points'])
+                    team.prop_players.append(player)
 
     return prop_total
 
@@ -161,6 +185,7 @@ def main():
 
     gsheet = gs.open_by_key(sheet_id)
     worksheet = "Week%s%s" % (week, position)
+    # print(week, position, worksheet)
     wsheet = gsheet.worksheet(worksheet)
 
     row_offset = 2
