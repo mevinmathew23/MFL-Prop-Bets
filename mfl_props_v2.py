@@ -6,8 +6,8 @@ import datetime
 import threading
 import argparse
 import gspread
+from gspread.models import Cell
 from oauth2client.service_account import ServiceAccountCredentials
-
 
 # Class to get Yahoo API
 class Yahoo_Api():
@@ -45,7 +45,12 @@ class Team():
 # Function to get each players statistic on a given week
 def get_player_stats(player_id, week):
     yahoo_api._login()
-    url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/%s.l.%s/players;player_keys=%s.p.%s/stats;type=week;week=%s' % (game_id, league_id, game_id, player_id, week)
+    url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/{game_id}.l.{league_id}/players;player_keys={game_id}.p.{player_id}/stats;type=week;week={week}'.format(
+        game_id=game_id,
+        league_id=league_id,
+        player_id=player_id,
+        week=week
+    )
     # print(game_id, league_id, game_id, player_id, week)
     response = oauth.session.get(url, params={'format': 'json'})
     r = response.json()
@@ -57,7 +62,12 @@ def get_player_stats(player_id, week):
 def get_team_info(tid, week, prop_position):
     team = Team()
     yahoo_api._login()
-    url = 'https://fantasysports.yahooapis.com/fantasy/v2/team/%s.l.%s.t.%s/roster;week=%s' % (game_id, league_id, tid, week)
+    url = 'https://fantasysports.yahooapis.com/fantasy/v2/team/{game_id}.l.{league_id}.t.{tid}/roster;week={week}'.format(
+        game_id=game_id,
+        league_id=league_id,
+        tid=tid,
+        week=week
+    )
     response = oauth.session.get(url, params={'format': 'json'})
     # print(game_id, league_id, tid, week)
     r = response.json()
@@ -184,22 +194,23 @@ def main():
     gs = gspread.authorize(credentials)
 
     gsheet = gs.open_by_key(sheet_id)
-    worksheet = "Week%s%s" % (week, position)
+    worksheet = 'Week{week}{position}'.format(week=week, position=position)
     # print(week, position, worksheet)
     wsheet = gsheet.worksheet(worksheet)
 
     row_offset = 2
-
+    cells = []
     for team in team_list:
         for i in range(row_offset, row_offset + len(team.prop_players)):
             if i == row_offset:
-                wsheet.update_cell(i, 1, team.manager)
-                wsheet.update_cell(i, 5, team.prop_total)
-            wsheet.update_cell(i, 2, team.prop_players[row_offset-i]['name'])
-            wsheet.update_cell(i, 3, team.prop_players[row_offset-i]['selected_position'])
-            wsheet.update_cell(i, 4, team.prop_players[row_offset-i]['points'])
+                cells.append(Cell(row=i, col=1, value=team.manager))
+                cells.append(Cell(row=i, col=5, value=team.prop_total))
+            cells.append(Cell(row=i, col=2, value=team.prop_players[row_offset-i]['name']))
+            cells.append(Cell(row=i, col=3, value=team.prop_players[row_offset-i]['selected_position']))
+            cells.append(Cell(row=i, col=4, value=team.prop_players[row_offset-i]['points']))
             i += 1
         row_offset += len(team.prop_players) + 2
+    wsheet.update_cells(cells)
 
 
 
