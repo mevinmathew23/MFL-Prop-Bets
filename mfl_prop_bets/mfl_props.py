@@ -45,12 +45,12 @@ def main():
     print(f"Using league {year_config.league_id} for game {year_config.game_id}")
 
     # Initialize clients
-    yahoo_client = YahooClient(year_config=year_config, oauth_file=settings.OAUTH_FILE)
+    yahoo_client = YahooClient(year_config=year_config, oauth_file=settings.oauth_file)
 
     sheets_client = SheetsClient(
-        service_account_file=settings.SERVICE_ACCOUNT_FILE,
+        service_account_file=settings.service_account_file,
         sheet_id=year_config.sheet_id,
-        scopes=settings.GOOGLE_SHEETS_SCOPE,
+        scopes=settings.google_sheets_scope,
     )
 
     # Get team information for all teams

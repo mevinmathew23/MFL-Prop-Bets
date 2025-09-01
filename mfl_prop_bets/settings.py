@@ -19,9 +19,9 @@ class PropBetSettings(BaseSettings):
     current_year: str = Field(default="2024", alias="CURRENT_YEAR")
 
     # File paths
-    oauth_file: str = Field(default="./oauth.json", alias="OAUTH_FILE")
+    oauth_file: str = Field(default="./mfl_prop_bets/oauth.json", alias="OAUTH_FILE")
     league_info_file: str = Field(
-        default="./league_info.json", alias="LEAGUE_INFO_FILE"
+        default="./mfl_prop_bets/league_info.json", alias="LEAGUE_INFO_FILE"
     )
     service_account_file: str = Field(
         default="mfl-service-acct.json", alias="SERVICE_ACCOUNT_FILE"
