@@ -3,6 +3,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -44,7 +45,7 @@ class PropBetSettings(BaseSettings):
         """Convert string log level to logging constant."""
         return getattr(logging, self.log_level.upper(), logging.INFO)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._year_configs: dict[str, YearConfig] | None = None
 
@@ -53,6 +54,7 @@ class PropBetSettings(BaseSettings):
         """Load and cache year configurations."""
         if self._year_configs is None:
             self._load_year_configs()
+        assert self._year_configs is not None
         return self._year_configs
 
     def _load_year_configs(self) -> None:

@@ -1,7 +1,7 @@
 """Yahoo Fantasy Sports API client."""
 
 import logging
-from typing import Optional
+from typing import Any
 
 from tqdm import tqdm
 
@@ -16,9 +16,9 @@ class YahooClient:
         self,
         year_config: YearConfig,
         oauth_file: str,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         log_level: int = logging.WARNING,
-    ):
+    ) -> None:
         """Initialize Yahoo client with league configuration."""
         self.year_config = year_config
         self.oauth_file = oauth_file
@@ -38,7 +38,7 @@ class YahooClient:
     def get_player_stats(self, player_id: str, week: str) -> float:
         """Get player statistics for a given week."""
         self._ensure_authenticated()
-        url = (
+        url: str = (
             f"https://fantasysports.yahooapis.com/fantasy/v2/league/"
             f"{self.year_config.game_id}.l.{self.year_config.league_id}/"
             f"players;player_keys={self.year_config.game_id}.p.{player_id}/"
@@ -47,19 +47,19 @@ class YahooClient:
 
         response = self.oauth.get(url, params={"format": "json"})
         try:
-            r = response.json()
+            r: dict[str, Any] = response.json()
         except Exception as e:
             self.logger.error(f"Failed to parse JSON response for player stats: {e}")
             raise
 
-        player_data = r["fantasy_content"]["league"][1]["players"]["0"]["player"][1]
-        points = player_data["player_points"]["total"]
+        player_data: dict[str, Any] = r["fantasy_content"]["league"][1]["players"]["0"]["player"][1]
+        points: str = player_data["player_points"]["total"]
         return float(points)
 
     def get_team_info(self, tid: str, week: str, prop_position: str) -> Team:
         """Get team information for a given week and prop position."""
         self._ensure_authenticated()
-        url = (
+        url: str = (
             f"https://fantasysports.yahooapis.com/fantasy/v2/team/"
             f"{self.year_config.game_id}.l.{self.year_config.league_id}.t.{tid}/"
             f"roster;week={week}"
@@ -67,17 +67,17 @@ class YahooClient:
 
         response = self.oauth.get(url, params={"format": "json"})
         try:
-            r = response.json()
+            r: dict[str, Any] = response.json()
         except Exception as e:
             self.logger.error(f"Failed to parse JSON response for team info: {e}")
             raise
 
-        player_count = r["fantasy_content"]["team"][1]["roster"]["0"]["players"][
+        player_count: int = r["fantasy_content"]["team"][1]["roster"]["0"]["players"][
             "count"
         ]
-        players_data = r["fantasy_content"]["team"][1]["roster"]["0"]["players"]
+        players_data: dict[str, Any] = r["fantasy_content"]["team"][1]["roster"]["0"]["players"]
 
-        team = Team(
+        team: Team = Team(
             tid=tid,
             team_name=r["fantasy_content"]["team"][0][2]["name"],
             manager=r["fantasy_content"]["team"][0][-1]["managers"][0]["manager"][
@@ -88,7 +88,7 @@ class YahooClient:
         # Process players with progress bar
         with tqdm(
             range(player_count),
-            desc=f"  Loading {team.team_name[:15]}... players",
+            desc=f"  Loading {(team.team_name or '')[:15]}... players",
             unit="player",
             leave=False,
             position=1,
@@ -123,7 +123,8 @@ class YahooClient:
                     primary_position=primary_position,
                 )
 
-                player.points = self.get_player_stats(player.player_id, week)
+                if player.player_id:
+                    player.points = self.get_player_stats(player.player_id, week)
                 team.players.append(player)
 
         team.prop_total = self._calculate_prop_total(team, prop_position)
