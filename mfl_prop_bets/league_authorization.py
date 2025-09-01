@@ -8,7 +8,7 @@ from mfl_prop_bets.clients.oauth_client import YahooOAuth
 
 # Module-level variables
 oauth_client: YahooOAuth | None = None
-yahoo_api: YahooApi | None = None
+yahoo_api: "YahooApi" | None = None
 
 
 class YahooApi:
