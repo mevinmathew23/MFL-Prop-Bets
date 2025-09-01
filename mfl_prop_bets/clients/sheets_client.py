@@ -10,7 +10,9 @@ from mfl_prop_bets.models import Team
 class SheetsClient:
     """Client for interacting with Google Sheets."""
 
-    def __init__(self, service_account_file: str, sheet_id: str, scopes: list[str]) -> None:
+    def __init__(
+        self, service_account_file: str, sheet_id: str, scopes: list[str]
+    ) -> None:
         """Initialize Google Sheets client."""
         self.service_account_file = service_account_file
         self.sheet_id = sheet_id
@@ -39,14 +41,28 @@ class SheetsClient:
                 # Add manager name and total only for the first player of each team
                 if i == 0:
                     cells.append(Cell(row=current_row, col=1, value=team.manager))
-                    cells.append(Cell(row=current_row, col=5, value=f"{team.prop_total:.2f}"))
+                    cells.append(
+                        Cell(row=current_row, col=5, value=f"{team.prop_total:.2f}")
+                    )
 
                 # Add player information
                 cells.append(Cell(row=current_row, col=2, value=prop_player.name))
                 cells.append(
                     Cell(row=current_row, col=3, value=prop_player.selected_position)
                 )
-                cells.append(Cell(row=current_row, col=4, value=f"{prop_player.points:.2f}" if prop_player.points is not None else ""))
+                cells.append(
+                    Cell(
+                        row=current_row,
+                        col=4,
+                        value=(
+                            f"{prop_player.points:.2f}"
+                            if prop_player.points is not None
+                            else ""
+                        ),
+                    )
+                )
+                cells.append(Cell(row=current_row, col=5, value=f"{team.prop_win}"))
+                cells.append(Cell(row=current_row, col=6, value=f"{team.botw_win}"))
 
             # Move to next team section (add space between teams)
             row_offset += len(team.prop_players) + 2

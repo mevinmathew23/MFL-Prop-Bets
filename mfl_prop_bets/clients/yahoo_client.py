@@ -5,7 +5,7 @@ from typing import Any
 
 from tqdm import tqdm
 
-from mfl_prop_bets.models import Player, Team, YearConfig
+from mfl_prop_bets.models import Matchup, Player, Team, YearConfig
 from mfl_prop_bets.clients.oauth_client import YahooOAuth
 
 
@@ -151,6 +151,7 @@ class YahooClient:
                 team.players.append(player)
 
         team.prop_total = self._calculate_prop_total(team, prop_position)
+        team.matchup = self._calculate_matchup_total(team, week)
         return team
 
     def _calculate_prop_total(self, team: Team, prop_position: str) -> float:
@@ -183,3 +184,37 @@ class YahooClient:
                 team.prop_players.append(player)
 
         return prop_total
+
+    def _calculate_matchup_total(self, team: Team, week: str) -> Matchup:
+        """Calculate the matchup total for a team and week."""
+
+        self._ensure_authenticated()
+        url: str = (
+            f"https://fantasysports.yahooapis.com/fantasy/v2/team/"
+            f"{self.year_config.game_id}.l.{self.year_config.league_id}.t.{team.tid}/"
+            f"matchups;weeks={week}"
+        )
+
+        response = self.oauth.get(url, params={"format": "json"})
+        try:
+            r: dict[str, Any] = response.json()
+        except Exception as e:
+            self.logger.error(f"Failed to parse JSON response for team info: {e}")
+            raise
+
+        matchup_data: list[dict[str, Any]] = r["fantasy_content"]["team"]["matchups"][
+            "matchup"
+        ]["teams"]["teams"]
+
+        # The first team is always the team that has the point of reference
+        team_1_data: dict[str, Any] = matchup_data[0]
+        team_2_data: dict[str, Any] = matchup_data[1]
+
+        return Matchup(
+            week=week,
+            week_total=float(team_1_data["team_points"]["total"]),
+            opp_tid=team_2_data["team_id"],
+            opponent_total=float(team_2_data["team_points"]["total"]),
+            margin=float(team_1_data["team_points"]["total"])
+            - float(team_2_data["team_points"]["total"]),
+        )

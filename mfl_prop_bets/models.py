@@ -23,6 +23,16 @@ class Player(BaseModel):
     keeper: bool | None = False
 
 
+class Matchup(BaseModel):
+    """Matchup data model."""
+
+    week: int | None = None
+    week_total: float = 0.0
+    opp_tid: str | None = None
+    opponent_total: float = 0.0
+    margin: float = 0.0
+
+
 class Team(BaseModel):
     """Team data model."""
 
@@ -33,3 +43,6 @@ class Team(BaseModel):
     prop_total: float = 0.0
     prop_players: list[Player] = []
     keeper_players: list[Player] = []
+    matchup: Matchup | None = None
+    prop_win: bool = False
+    botw_win: bool = False
