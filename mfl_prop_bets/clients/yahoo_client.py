@@ -202,17 +202,20 @@ class YahooClient:
             self.logger.error(f"Failed to parse JSON response for team info: {e}")
             raise
 
-        matchups = r["fantasy_content"]["team"]["matchups"]
-        matchup_data: list[dict[str, Any]] = matchups["matchup"]["teams"]["teams"]
+        matchups = r["fantasy_content"]["team"][1]["matchups"]
+        teams_data = matchups["0"]["matchup"]["0"]["teams"]
 
-        # The first team is always the team that has the point of reference
-        team_1_data: dict[str, Any] = matchup_data[0]
-        team_2_data: dict[str, Any] = matchup_data[1]
+        # Get the actual team data (team[1] contains the points data)
+        team_1_data: dict[str, Any] = teams_data["0"]["team"][1]
+        team_2_data: dict[str, Any] = teams_data["1"]["team"][1]
 
+        # Get team IDs from the metadata (team[0])
+        team_2_id = teams_data["1"]["team"][0][1]["team_id"]
+        
         return Matchup(
             week=week,
             week_total=float(team_1_data["team_points"]["total"]),
-            opp_tid=team_2_data["team_id"],
+            opp_tid=team_2_id,
             opponent_total=float(team_2_data["team_points"]["total"]),
             margin=float(team_1_data["team_points"]["total"])
             - float(team_2_data["team_points"]["total"]),
