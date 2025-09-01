@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "mfl-prop-bets"
+version = "0.1.0"
+description = "Yahoo Fantasy Football prop bet calculator with Google Sheets integration"
+authors = ["Mevin Mathew"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.0.0"
+yahoo-oauth = "^2.0.1"
+gspread = "^6.0.0"
+oauth2client = "^4.1.3"
+pydantic = "^2.0.0"
+httpx = "^0.25.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+mfl-props = "mfl_prop_bets.main:main"
