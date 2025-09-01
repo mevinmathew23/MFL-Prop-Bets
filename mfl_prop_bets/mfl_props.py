@@ -12,7 +12,11 @@ from mfl_prop_bets.settings import PropBetSettings
 
 
 def main() -> None:
-    """Main entry point for the application."""
+    """Main entry point for the MFL Prop Bets application.
+    
+    Processes fantasy football team data to calculate prop bet totals for a specific
+    position and week. Optionally updates a Google Sheets worksheet with the results.
+    """
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Arguments for prop bets")
     parser.add_argument(
@@ -34,11 +38,18 @@ def main() -> None:
         type=str,
         help="Specify which year's league configuration to use",
     )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        default=False,
+        help="Update the Google Sheets worksheet with the calculated data",
+    )
 
     args: argparse.Namespace = parser.parse_args()
     week: str = str(args.week)
     position: str = args.position
     year: str = args.year
+    update: bool = args.update
 
     # Initialize settings and get configuration
     settings: PropBetSettings = PropBetSettings()
@@ -46,14 +57,8 @@ def main() -> None:
 
     print(f"Using league {year_config.league_id} for game {year_config.game_id}")
 
-    # Initialize clients
+    # Initialize Yahoo client
     yahoo_client: YahooClient = YahooClient(year_config=year_config, oauth_file=settings.oauth_file)
-
-    sheets_client: SheetsClient = SheetsClient(
-        service_account_file=settings.service_account_file,
-        sheet_id=year_config.sheet_id,
-        scopes=settings.google_sheets_scope,
-    )
 
     # Get team information for all teams
     teams: list[Team] = []
@@ -83,11 +88,22 @@ def main() -> None:
                 }
             )
 
-    # Update Google Sheet
-    worksheet_name: str = f"Week{week}{position}"
-    sheets_client.update_worksheet(worksheet_name, teams)
-
-    print(f"Updated worksheet '{worksheet_name}' with {len(teams)} teams")
+    # Print results
+    print(f"Processed {len(teams)} teams for Week {week} {position} props")
+    
+    # Update Google Sheet if requested
+    if update:
+        # Initialize sheets client only when needed
+        sheets_client: SheetsClient = SheetsClient(
+            service_account_file=settings.service_account_file,
+            sheet_id=year_config.sheet_id,
+            scopes=settings.google_sheets_scope,
+        )
+        worksheet_name: str = f"Week{week}{position}"
+        sheets_client.update_worksheet(worksheet_name, teams)
+        print(f"Updated worksheet '{worksheet_name}' with {len(teams)} teams")
+    else:
+        print("Use --update flag to update the Google Sheets worksheet")
 
 
 if __name__ == "__main__":
