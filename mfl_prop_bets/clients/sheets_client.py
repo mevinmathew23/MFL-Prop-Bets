@@ -61,8 +61,20 @@ class SheetsClient:
                         ),
                     )
                 )
-                cells.append(Cell(row=current_row, col=5, value=f"{team.prop_win}"))
-                cells.append(Cell(row=current_row, col=6, value=f"{team.botw_win}"))
+                cells.append(
+                    Cell(
+                        row=current_row,
+                        col=5,
+                        value=f"{team.prop_win}" if team.prop_win else "",
+                    )
+                )
+                cells.append(
+                    Cell(
+                        row=current_row,
+                        col=6,
+                        value=f"{team.botw_win}" if team.botw_win else "",
+                    )
+                )
 
             # Move to next team section (add space between teams)
             row_offset += len(team.prop_players) + 2
