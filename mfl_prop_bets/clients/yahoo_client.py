@@ -5,8 +5,8 @@ from typing import Optional
 
 from tqdm import tqdm
 
-from ..models import Player, Team, YearConfig
-from .oauth_client import YahooOAuth
+from mfl_prop_bets.models import Player, Team, YearConfig
+from mfl_prop_bets.clients.oauth_client import YahooOAuth
 
 
 class YahooClient:

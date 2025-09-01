@@ -7,7 +7,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .models import YearConfig
+from mfl_prop_bets.models import YearConfig
 
 
 class PropBetSettings(BaseSettings):

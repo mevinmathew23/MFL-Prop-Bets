@@ -4,9 +4,9 @@ import argparse
 
 from tqdm import tqdm
 
-from .clients.sheets_client import SheetsClient
-from .clients.yahoo_client import YahooClient
-from .settings import PropBetSettings
+from mfl_prop_bets.clients.sheets_client import SheetsClient
+from mfl_prop_bets.clients.yahoo_client import YahooClient
+from mfl_prop_bets.settings import PropBetSettings
 
 
 def main():
