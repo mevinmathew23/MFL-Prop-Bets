@@ -25,7 +25,7 @@ class YahooApi:
     def _login(self) -> None:
         """Login to Yahoo API using OAuth."""
         global oauth_client
-        oauth_client = YahooOAuth(config_file="./oauth.json", log_level=self._log_level)
+        oauth_client = YahooOAuth(config_file="oauth.json", log_level=self._log_level)
         oauth_client.ensure_valid_token()
 
 
@@ -36,12 +36,22 @@ class Authorize:
         """Authorize and authenticate with Yahoo Fantasy Sports league."""
         # UPDATE LEAGUE GAME ID
         global yahoo_api, oauth_client
-        if yahoo_api:
+        
+        # Initialize oauth_client if it doesn't exist
+        if yahoo_api and not oauth_client:
             yahoo_api._login()  # pylint: disable=protected-access
-        url = "https://fantasysports.yahooapis.com/fantasy/v2/league/380.l.XXXXXX/transactions"
+        
         if oauth_client:
-            response = oauth_client.get(url, params={"format": "json"})
-            _ = response.json()  # Response data not used
+            try:
+                # Test API connection with a simple endpoint
+                url = "https://fantasysports.yahooapis.com/fantasy/v2/league/380.l.XXXXXX/transactions"
+                response = oauth_client.get(url, params={"format": "json"})
+                _ = response.json()
+                print("Successfully authenticated with Yahoo API")
+            except Exception as e:
+                print(f"API test failed: {e}")
+        else:
+            print("OAuth client not initialized")
         # with open('YahooGameInfo.json', 'w') as outfile:
         # json.dump(r, outfile)
         # return;
@@ -52,7 +62,7 @@ def main() -> None:
     ##### Get Yahoo Auth ####
 
     # Yahoo Keys
-    with open("./oauth.json", encoding="utf-8") as json_yahoo_file:
+    with open("oauth.json", encoding="utf-8") as json_yahoo_file:
         auths = json.load(json_yahoo_file)
     yahoo_consumer_key = auths["consumer_key"]
     yahoo_consumer_secret = auths["consumer_secret"]
