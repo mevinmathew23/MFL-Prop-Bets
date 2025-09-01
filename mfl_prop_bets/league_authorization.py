@@ -1,73 +1,90 @@
-import pandas as pd
-from yahoo_oauth import OAuth2
-import logging
+"""Module for Yahoo API authorization and league management."""
+
 import json
-from json import dumps
-import datetime
+import logging
+
+from mfl_prop_bets.clients.oauth_client import YahooOAuth
+
+# Module-level variables
+oauth_client = None
+yahoo_api = None
 
 
-class Yahoo_Api():
-    def __init__(self,
-                 consumer_key,
+class YahooApi:
+    """Yahoo API client for fantasy sports."""
 
-                 consumer_secret#,
-                #access_token
-                ):
+    def __init__(self, consumer_key, consumer_secret, log_level: int = logging.INFO):
+        """Initialize Yahoo API client with consumer credentials."""
         self._consumer_key = consumer_key
         self._consumer_secret = consumer_secret
-        #self._access_token = access_token
+        self._log_level = log_level
+        # self._access_token = access_token
         self._authorization = None
+
     def _login(self):
-        global oauth
-        oauth = OAuth2(None, None, from_file='./oauth.json')
-        if not oauth.token_is_valid():
-            oauth.refresh_access_token()
+        """Login to Yahoo API using OAuth."""
+        global oauth_client
+        oauth_client = YahooOAuth(config_file="./oauth.json", log_level=self._log_level)
+        oauth_client.ensure_valid_token()
 
-class Authorize():
 
-    def AuthorizeLeague(self):
+class Authorize:
+    """Authorization handler for Yahoo Fantasy Sports leagues."""
+
+    def authorize_league(self):
+        """Authorize and authenticate with Yahoo Fantasy Sports league."""
         # UPDATE LEAGUE GAME ID
-        yahoo_api._login()
-        url = 'https://fantasysports.yahooapis.com/fantasy/v2/league/380.l.XXXXXX/transactions'
-        response = oauth.session.get(url, params={'format': 'json'})
-        r = response.json()
-        #with open('YahooGameInfo.json', 'w') as outfile:
-            #json.dump(r, outfile)
-            #return;
+        yahoo_api._login()  # pylint: disable=protected-access
+        url = "https://fantasysports.yahooapis.com/fantasy/v2/league/380.l.XXXXXX/transactions"
+        response = oauth_client.get(url, params={"format": "json"})
+        _ = response.json()  # Response data not used
+        # with open('YahooGameInfo.json', 'w') as outfile:
+        # json.dump(r, outfile)
+        # return;
+
+
 def main():
-##### Get Yahoo Auth ####
+    """Main function to initialize and run Yahoo API authorization."""
+    ##### Get Yahoo Auth ####
 
     # Yahoo Keys
-    with open('./oauth.json') as json_yahoo_file:
+    with open("./oauth.json", encoding="utf-8") as json_yahoo_file:
         auths = json.load(json_yahoo_file)
-    yahoo_consumer_key = auths['consumer_key']
-    yahoo_consumer_secret = auths['consumer_secret']
-    #yahoo_access_token = auths['access_token']
-    #yahoo_access_secret = auths['access_token_secret']
+    yahoo_consumer_key = auths["consumer_key"]
+    yahoo_consumer_secret = auths["consumer_secret"]
+    # yahoo_access_token = auths['access_token']
+    # yahoo_access_secret = auths['access_token_secret']
     json_yahoo_file.close()
 
-#### Declare Yahoo Variable ####
+    #### Declare Yahoo Variable ####
 
     global yahoo_api
-    yahoo_api = Yahoo_Api(yahoo_consumer_key,
-                            yahoo_consumer_secret,
-                            #yahoo_access_token,
-                            #yahoo_access_secret)
-                                )
-#### Where the magic happen ####
+    yahoo_api = YahooApi(
+        yahoo_consumer_key,
+        yahoo_consumer_secret,
+        # yahoo_access_token,
+        # yahoo_access_secret)
+    )
+    #### Where the magic happen ####
     bot = Bot(yahoo_api)
     bot.run()
 
-class Bot():
-    def __init__(self, yahoo_api):
 
-        self._yahoo_api = yahoo_api
+class Bot:
+    """Bot class to handle Yahoo API operations."""
+
+    def __init__(self, yahoo_api_instance):
+        """Initialize Bot with Yahoo API instance."""
+
+        self._yahoo_api = yahoo_api_instance
 
     def run(self):
+        """Run the bot authorization process."""
         # Data Updates
         at = Authorize()
-        at.AuthorizeLeague()
-        print('Authorization Complete')
+        at.authorize_league()
+        print("Authorization Complete")
+
 
 if __name__ == "__main__":
     main()

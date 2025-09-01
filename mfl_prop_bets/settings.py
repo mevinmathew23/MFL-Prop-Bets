@@ -1,70 +1,92 @@
 """Configuration settings for MFL Prop Bets application."""
 
 import json
+import logging
 from pathlib import Path
-from models import YearConfig
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from .models import YearConfig
 
 
-class Settings:
+class PropBetSettings(BaseSettings):
     """Application settings manager."""
-    
+
+    model_config = SettingsConfigDict(env_prefix="MFL_PROP_BET_")
+
     # Current year to use for calculations
-    CURRENT_YEAR = "2024"
-    
+    current_year: str = Field(default="2024", alias="CURRENT_YEAR")
+
     # File paths
-    OAUTH_FILE = "./oauth.json"
-    LEAGUE_INFO_FILE = "./league_info.json"
-    SERVICE_ACCOUNT_FILE = "mfl-service-acct.json"
-    
+    oauth_file: str = Field(default="./oauth.json", alias="OAUTH_FILE")
+    league_info_file: str = Field(
+        default="./league_info.json", alias="LEAGUE_INFO_FILE"
+    )
+    service_account_file: str = Field(
+        default="mfl-service-acct.json", alias="SERVICE_ACCOUNT_FILE"
+    )
+
+    # Logging configuration
+    log_level: str = Field(default="INFO")
+
     # Google Sheets scope
-    GOOGLE_SHEETS_SCOPE = [
-        'https://spreadsheets.google.com/feeds',
-        'https://www.googleapis.com/auth/drive'
-    ]
-    
-    def __init__(self):
+    google_sheets_scope: list[str] = Field(
+        default=[
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ],
+        alias="GOOGLE_SHEETS_SCOPE",
+    )
+
+    @property
+    def log_level_int(self) -> int:
+        """Convert string log level to logging constant."""
+        return getattr(logging, self.log_level.upper(), logging.INFO)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._year_configs: dict[str, YearConfig] | None = None
-    
+
     @property
     def year_configs(self) -> dict[str, YearConfig]:
         """Load and cache year configurations."""
         if self._year_configs is None:
             self._load_year_configs()
         return self._year_configs
-    
+
     def _load_year_configs(self) -> None:
         """Load year configurations from league_info.json."""
-        league_file_path = Path(self.LEAGUE_INFO_FILE)
+        league_file_path = Path(self.league_info_file)
         if not league_file_path.exists():
-            raise FileNotFoundError(f"League info file not found: {self.LEAGUE_INFO_FILE}")
-        
-        with open(league_file_path) as f:
+            raise FileNotFoundError(
+                f"League info file not found: {self.league_info_file}"
+            )
+
+        with open(league_file_path, encoding="utf-8") as f:
             data = json.load(f)
-        
+
         self._year_configs = {
-            year: YearConfig(**config)
-            for year, config in data.items()
+            year: YearConfig(**config) for year, config in data.items()
         }
-    
+
     def get_current_year_config(self) -> YearConfig:
         """Get configuration for the current year."""
-        if self.CURRENT_YEAR not in self.year_configs:
-            raise ValueError(f"Configuration for year {self.CURRENT_YEAR} not found")
-        return self.year_configs[self.CURRENT_YEAR]
-    
+        if self.current_year not in self.year_configs:
+            raise ValueError(f"Configuration for year {self.current_year} not found")
+        return self.year_configs[self.current_year]
+
     def get_year_config(self, year: str) -> YearConfig:
         """Get configuration for a specific year."""
         if year not in self.year_configs:
             raise ValueError(f"Configuration for year {year} not found")
         return self.year_configs[year]
-    
+
     def load_oauth_credentials(self) -> dict[str, str]:
         """Load OAuth credentials from file."""
-        oauth_file_path = Path(self.OAUTH_FILE)
+        oauth_file_path = Path(self.oauth_file)
         if not oauth_file_path.exists():
-            raise FileNotFoundError(f"OAuth file not found: {self.OAUTH_FILE}")
-        
-        with open(oauth_file_path) as f:
+            raise FileNotFoundError(f"OAuth file not found: {self.oauth_file}")
+
+        with open(oauth_file_path, encoding="utf-8") as f:
             return json.load(f)
-
-

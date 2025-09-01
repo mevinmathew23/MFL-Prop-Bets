@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Running isort..."
+poetry run isort --check mfl_prop_bets
+echo "Running pylint..."
+poetry run pylint --fail-under=9 mfl_prop_bets
+echo "Running black..."
+poetry run black --check mfl_prop_bets
+echo "Running mypy..."
+poetry run mypy --strict mfl_prop_bets
+echo "Running bandit..."
+poetry run bandit --recursive --skip B105 mfl_prop_bets
+echo "Running pytest..."
+poetry run pytest tests/unit
