@@ -202,9 +202,8 @@ class YahooClient:
             self.logger.error(f"Failed to parse JSON response for team info: {e}")
             raise
 
-        matchup_data: list[dict[str, Any]] = r["fantasy_content"]["team"]["matchups"][
-            "matchup"
-        ]["teams"]["teams"]
+        matchups = r["fantasy_content"]["team"]["matchups"]
+        matchup_data: list[dict[str, Any]] = matchups["matchup"]["teams"]["teams"]
 
         # The first team is always the team that has the point of reference
         team_1_data: dict[str, Any] = matchup_data[0]
