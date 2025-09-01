@@ -26,7 +26,7 @@ class SheetsClient:
         )
         self.client = gspread.authorize(credentials)
 
-    def update_worksheet(self, worksheet_name: str, teams: dict[str, Team]) -> None:
+    def update_worksheet(self, worksheet_name: str, teams: list[Team]) -> None:
         """Update a worksheet with team data."""
         sheet = self.client.open_by_key(self.sheet_id)
         worksheet = sheet.worksheet(worksheet_name)
@@ -34,7 +34,7 @@ class SheetsClient:
         row_offset: int = 2
         cells: list[Cell] = []
 
-        for team in teams.values():
+        for team in teams:
             for i, prop_player in enumerate(team.prop_players):
                 current_row: int = row_offset + i
 
@@ -43,6 +43,20 @@ class SheetsClient:
                     cells.append(Cell(row=current_row, col=1, value=team.manager))
                     cells.append(
                         Cell(row=current_row, col=5, value=f"{team.prop_total:.2f}")
+                    )
+                    cells.append(
+                        Cell(
+                            row=current_row,
+                            col=6,
+                            value=f"{team.prop_win}" if team.prop_win else "",
+                        )
+                    )
+                    cells.append(
+                        Cell(
+                            row=current_row,
+                            col=7,
+                            value=f"{team.botw_win}" if team.botw_win else "",
+                        )
                     )
 
                 # Add player information
@@ -59,20 +73,6 @@ class SheetsClient:
                             if prop_player.points is not None
                             else ""
                         ),
-                    )
-                )
-                cells.append(
-                    Cell(
-                        row=current_row,
-                        col=5,
-                        value=f"{team.prop_win}" if team.prop_win else "",
-                    )
-                )
-                cells.append(
-                    Cell(
-                        row=current_row,
-                        col=6,
-                        value=f"{team.botw_win}" if team.botw_win else "",
                     )
                 )
 
