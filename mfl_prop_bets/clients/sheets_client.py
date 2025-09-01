@@ -2,8 +2,9 @@
 
 import gspread
 from gspread import Cell
-from mfl_prop_bets.models import Team
 from oauth2client.service_account import ServiceAccountCredentials
+
+from mfl_prop_bets.models import Team
 
 
 class SheetsClient:

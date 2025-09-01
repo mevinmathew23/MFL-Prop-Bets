@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class YearConfig(BaseModel):
     """Configuration for a specific year."""
+
     league_id: str
     game_id: str
     team_ids: list[str]
@@ -13,6 +14,7 @@ class YearConfig(BaseModel):
 
 class Player(BaseModel):
     """Player data model."""
+
     player_id: str | None = None
     name: str | None = None
     selected_position: str | None = None
@@ -22,6 +24,7 @@ class Player(BaseModel):
 
 class Team(BaseModel):
     """Team data model."""
+
     team_name: str | None = None
     tid: str | None = None
     manager: str | None = None

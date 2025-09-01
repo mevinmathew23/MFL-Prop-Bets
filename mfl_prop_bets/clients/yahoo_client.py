@@ -5,8 +5,8 @@ from typing import Optional
 
 from tqdm import tqdm
 
-from .oauth_client import YahooOAuth
 from ..models import Player, Team, YearConfig
+from .oauth_client import YahooOAuth
 
 
 class YahooClient:
