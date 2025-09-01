@@ -26,7 +26,7 @@ class SheetsClient:
         )
         self.client = gspread.authorize(credentials)
 
-    def update_worksheet(self, worksheet_name: str, teams: list[Team]) -> None:
+    def update_worksheet(self, worksheet_name: str, teams: dict[str, Team]) -> None:
         """Update a worksheet with team data."""
         sheet = self.client.open_by_key(self.sheet_id)
         worksheet = sheet.worksheet(worksheet_name)
@@ -34,7 +34,7 @@ class SheetsClient:
         row_offset: int = 2
         cells: list[Cell] = []
 
-        for team in teams:
+        for team in teams.values():
             for i, prop_player in enumerate(team.prop_players):
                 current_row: int = row_offset + i
 
