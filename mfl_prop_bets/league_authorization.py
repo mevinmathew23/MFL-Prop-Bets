@@ -1,103 +1,80 @@
-"""Module for Yahoo API authorization and league management."""
+"""Simple Yahoo OAuth token refresh utility."""
 
 import json
 import logging
-from typing import Any
+from pathlib import Path
 
 from mfl_prop_bets.clients.oauth_client import YahooOAuth
 
-# Module-level variables
-oauth_client = None
-yahoo_api = None
 
+def refresh_token(config_file: str = "oauth.json") -> str:
+    """
+    Refresh Yahoo OAuth token and return the current access token.
 
-class YahooApi:
-    """Yahoo API client for fantasy sports."""
+    Args:
+        config_file: Path to OAuth configuration file
 
-    def __init__(self, consumer_key: str, consumer_secret: str, log_level: int = logging.INFO) -> None:
-        """Initialize Yahoo API client with consumer credentials."""
-        self._consumer_key = consumer_key
-        self._consumer_secret = consumer_secret
-        self._log_level = log_level
-        # self._access_token = access_token
-        self._authorization = None
+    Returns:
+        Current valid access token
 
-    def _login(self) -> None:
-        """Login to Yahoo API using OAuth."""
-        global oauth_client
-        oauth_client = YahooOAuth(config_file="oauth.json", log_level=self._log_level)
+    Raises:
+        Exception: If token refresh fails
+    """
+    try:
+        # Initialize OAuth client
+        oauth_client = YahooOAuth(config_file=config_file, log_level=logging.INFO)
+
+        # Ensure we have a valid token (refreshes if needed)
         oauth_client.ensure_valid_token()
 
-
-class Authorize:
-    """Authorization handler for Yahoo Fantasy Sports leagues."""
-
-    def authorize_league(self) -> None:
-        """Authorize and authenticate with Yahoo Fantasy Sports league."""
-        # UPDATE LEAGUE GAME ID
-        global yahoo_api, oauth_client
-        
-        # Initialize oauth_client if it doesn't exist
-        if yahoo_api and not oauth_client:
-            yahoo_api._login()  # pylint: disable=protected-access
-        
-        if oauth_client:
-            try:
-                # Test API connection with a simple endpoint
-                url = "https://fantasysports.yahooapis.com/fantasy/v2/league/380.l.XXXXXX/transactions"
-                response = oauth_client.get(url, params={"format": "json"})
-                _ = response.json()
-                print("Successfully authenticated with Yahoo API")
-            except Exception as e:
-                print(f"API test failed: {e}")
+        # Return the current access token
+        if oauth_client.config and oauth_client.config.access_token:
+            print("Token refresh successful!")
+            return oauth_client.config.access_token
         else:
-            print("OAuth client not initialized")
-        # with open('YahooGameInfo.json', 'w') as outfile:
-        # json.dump(r, outfile)
-        # return;
+            raise Exception("No access token available")
+
+    except Exception as e:
+        print(f"Token refresh failed: {e}")
+        raise
+
+
+def get_current_token(config_file: str = "oauth.json") -> str | None:
+    """
+    Get the current access token without refreshing.
+
+    Args:
+        config_file: Path to OAuth configuration file
+
+    Returns:
+        Current access token or None if not available
+    """
+    try:
+        config_path = Path(config_file)
+        if not config_path.exists():
+            print(f"Config file not found: {config_file}")
+            return None
+
+        with open(config_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        return data.get("access_token")
+
+    except Exception as e:
+        print(f"Error reading token: {e}")
+        return None
 
 
 def main() -> None:
-    """Main function to initialize and run Yahoo API authorization."""
-    ##### Get Yahoo Auth ####
+    """Main function to refresh token and display it."""
+    try:
+        # Refresh and get new token
+        token = refresh_token()
+        print(f"\nCurrent access token:\n{token}")
+        print(f"\nToken saved to oauth.json")
 
-    # Yahoo Keys
-    with open("oauth.json", encoding="utf-8") as json_yahoo_file:
-        auths = json.load(json_yahoo_file)
-    yahoo_consumer_key = auths["consumer_key"]
-    yahoo_consumer_secret = auths["consumer_secret"]
-    # yahoo_access_token = auths['access_token']
-    # yahoo_access_secret = auths['access_token_secret']
-    json_yahoo_file.close()
-
-    #### Declare Yahoo Variable ####
-
-    global yahoo_api
-    yahoo_api = YahooApi(
-        yahoo_consumer_key,
-        yahoo_consumer_secret,
-        # yahoo_access_token,
-        # yahoo_access_secret)
-    )
-    #### Where the magic happen ####
-    bot = Bot(yahoo_api)
-    bot.run()
-
-
-class Bot:
-    """Bot class to handle Yahoo API operations."""
-
-    def __init__(self, yahoo_api_instance: Any) -> None:
-        """Initialize Bot with Yahoo API instance."""
-
-        self._yahoo_api = yahoo_api_instance
-
-    def run(self) -> None:
-        """Run the bot authorization process."""
-        # Data Updates
-        at = Authorize()
-        at.authorize_league()
-        print("Authorization Complete")
+    except Exception as e:
+        print(f"Failed to refresh token: {e}")
 
 
 if __name__ == "__main__":
