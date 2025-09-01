@@ -52,12 +52,25 @@ class YahooClient:
             self.logger.error(f"Failed to parse JSON response for player stats: {e}")
             raise
 
-        player_data: dict[str, Any] = r["fantasy_content"]["league"][1]["players"]["0"]["player"][1]
+        player_data: dict[str, Any] = r["fantasy_content"]["league"][1]["players"]["0"][
+            "player"
+        ][1]
         points: str = player_data["player_points"]["total"]
         return float(points)
 
-    def get_team_info(self, tid: str, week: str, prop_position: str) -> Team:
-        """Get team information for a given week and prop position."""
+    def get_team_info(self, tid: str, week: str, prop_position: str, all_players: bool = False) -> Team:
+        """Get team information for a given week and prop position.
+        
+        Args:
+            tid: Team ID
+            week: Fantasy week number
+            prop_position: Position to get prop stats for (e.g. 'QB', 'RB', etc.)
+            all_players: If True, fetch stats for all players (for debugging). 
+                        If False (default), only fetch stats for players matching prop_position.
+        
+        Returns:
+            Team object with player information and stats
+        """
         self._ensure_authenticated()
         url: str = (
             f"https://fantasysports.yahooapis.com/fantasy/v2/team/"
@@ -75,7 +88,9 @@ class YahooClient:
         player_count: int = r["fantasy_content"]["team"][1]["roster"]["0"]["players"][
             "count"
         ]
-        players_data: dict[str, Any] = r["fantasy_content"]["team"][1]["roster"]["0"]["players"]
+        players_data: dict[str, Any] = r["fantasy_content"]["team"][1]["roster"]["0"][
+            "players"
+        ]
 
         team: Team = Team(
             tid=tid,
@@ -121,10 +136,19 @@ class YahooClient:
                         "position"
                     ],
                     primary_position=primary_position,
+                    keeper=(
+                        player_data["player"][1]["is_keeper"]["status"]
+                        if player_data["player"][1]["is_keeper"]["status"]
+                        else False
+                    ),
                 )
 
-                if player.player_id:
+                # Only fetch player stats if:
+                # 1. all_players=True (for debugging), or
+                # 2. player's selected position matches the prop position
+                if player.player_id and (all_players or player.selected_position == prop_position):
                     player.points = self.get_player_stats(player.player_id, week)
+                
                 team.players.append(player)
 
         team.prop_total = self._calculate_prop_total(team, prop_position)

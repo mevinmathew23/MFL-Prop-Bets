@@ -20,6 +20,7 @@ class Player(BaseModel):
     selected_position: str | None = None
     primary_position: str | None = None
     points: float | None = None
+    keeper: bool | None = False
 
 
 class Team(BaseModel):
@@ -31,3 +32,4 @@ class Team(BaseModel):
     players: list[Player] = []
     prop_total: float = 0.0
     prop_players: list[Player] = []
+    keeper_players: list[Player] = []
