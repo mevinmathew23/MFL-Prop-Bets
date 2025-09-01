@@ -39,14 +39,14 @@ class SheetsClient:
                 # Add manager name and total only for the first player of each team
                 if i == 0:
                     cells.append(Cell(row=current_row, col=1, value=team.manager))
-                    cells.append(Cell(row=current_row, col=5, value=str(team.prop_total)))
+                    cells.append(Cell(row=current_row, col=5, value=f"{team.prop_total:.2f}"))
 
                 # Add player information
                 cells.append(Cell(row=current_row, col=2, value=prop_player.name))
                 cells.append(
                     Cell(row=current_row, col=3, value=prop_player.selected_position)
                 )
-                cells.append(Cell(row=current_row, col=4, value=str(prop_player.points) if prop_player.points is not None else ""))
+                cells.append(Cell(row=current_row, col=4, value=f"{prop_player.points:.2f}" if prop_player.points is not None else ""))
 
             # Move to next team section (add space between teams)
             row_offset += len(team.prop_players) + 2
