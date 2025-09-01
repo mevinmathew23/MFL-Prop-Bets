@@ -1,1 +1,31 @@
-*.json
+# OAuth and service account credentials
+oauth.json
+mfl-service-acct.json
+
+# League configuration (contains private sheet IDs)
+league_info.json
+
+# Virtual environment
+.venv/
+mfl_env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Python version
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
