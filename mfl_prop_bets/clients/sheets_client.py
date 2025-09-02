@@ -2,7 +2,7 @@
 
 import gspread
 from gspread import Cell
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 from mfl_prop_bets.models import Team
 
@@ -21,8 +21,8 @@ class SheetsClient:
 
     def _authorize(self) -> None:
         """Authorize with Google Sheets API."""
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            self.service_account_file, self.scopes
+        credentials = Credentials.from_service_account_file(
+            self.service_account_file, scopes=self.scopes
         )
         self.client = gspread.authorize(credentials)
 
@@ -55,7 +55,11 @@ class SheetsClient:
                         Cell(
                             row=current_row,
                             col=7,
-                            value=f"{team.matchup.margin:.2f}" if team.matchup.margin else "",
+                            value=(
+                                f"{team.matchup.margin:.2f}"
+                                if team.matchup.margin
+                                else ""
+                            ),
                         )
                     )
                     cells.append(
