@@ -9,11 +9,12 @@ from mfl_prop_bets.clients.sheets_client import SheetsClient
 from mfl_prop_bets.clients.yahoo_client import YahooClient
 from mfl_prop_bets.models import Team
 from mfl_prop_bets.settings import PropBetSettings
+from mfl_prop_bets.prop_winners import determine_prop_winner, determine_botw_winner
 
 
 def main() -> None:
     """Main entry point for the MFL Prop Bets application.
-    
+
     Processes fantasy football team data to calculate prop bet totals for a specific
     position and week. Optionally updates a Google Sheets worksheet with the results.
     """
@@ -58,10 +59,12 @@ def main() -> None:
     print(f"Using league {year_config.league_id} for game {year_config.game_id}")
 
     # Initialize Yahoo client
-    yahoo_client: YahooClient = YahooClient(year_config=year_config, oauth_file=settings.oauth_file)
+    yahoo_client: YahooClient = YahooClient(
+        year_config=year_config, oauth_file=settings.oauth_file
+    )
 
     # Get team information for all teams
-    teams: list[Team] = []
+    teams: dict[str, Team] = {}
     print(
         f"Processing {len(year_config.team_ids)} teams for Week {week} {position} props..."
     )
@@ -70,7 +73,7 @@ def main() -> None:
         for tid in team_pbar:
             team_pbar.set_postfix({"Team ID": tid})
             team: Team = yahoo_client.get_team_info(tid, week, position)
-            teams.append(team)
+            teams[tid] = team
             team_pbar.set_postfix(
                 {
                     "Team": (
@@ -88,9 +91,10 @@ def main() -> None:
                 }
             )
 
-    # Print results
-    print(f"Processed {len(teams)} teams for Week {week} {position} props")
-    
+    # Determine prop winners
+    determine_prop_winner(teams)
+    determine_botw_winner(teams)
+
     # Update Google Sheet if requested
     if update:
         # Initialize sheets client only when needed
