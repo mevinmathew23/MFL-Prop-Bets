@@ -55,6 +55,13 @@ class SheetsClient:
                         Cell(
                             row=current_row,
                             col=7,
+                            value=f"{team.matchup.margin:.2f}" if team.matchup.margin else "",
+                        )
+                    )
+                    cells.append(
+                        Cell(
+                            row=current_row,
+                            col=8,
                             value=f"{team.botw_win}" if team.botw_win else "",
                         )
                     )
