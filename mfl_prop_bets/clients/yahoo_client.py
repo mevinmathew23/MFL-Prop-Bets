@@ -143,8 +143,10 @@ class YahooClient:
                 # Only fetch player stats if:
                 # 1. all_players=True (for debugging), or
                 # 2. player's selected position matches the prop position
+                # Handle multiple positions separated by "|"
+                prop_positions = prop_position.split("|") if "|" in prop_position else [prop_position]
                 if player.player_id and (
-                    all_players or player.selected_position == prop_position
+                    all_players or player.selected_position in prop_positions
                 ):
                     player.points = self.get_player_stats(player.player_id, week)
 

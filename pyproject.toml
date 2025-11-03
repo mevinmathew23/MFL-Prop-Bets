@@ -26,3 +26,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 mfl-props = "mfl_prop_bets.main:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
